@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"course/internal/domain"
+	"course/internal/model"
 	"errors"
 
 	"github.com/gin-gonic/gin"
@@ -60,7 +60,7 @@ func (uu UserUsecase) Register(c *gin.Context) {
 		return
 	}
 
-	user := domain.NewUser(registerRequest.Name, registerRequest.Email, registerRequest.Password)
+	user := model.NewUser(registerRequest.Name, registerRequest.Email, registerRequest.Password)
 	if err := uu.db.Create(user).Error; err != nil {
 		c.JSON(500, map[string]string{
 			"message": "cannot create user",
@@ -84,7 +84,7 @@ func (uu UserUsecase) DecryptJWT(token string) (map[string]interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("auth invalid")
 		}
-		return domain.PrivateKey, nil
+		return model.PrivateKey, nil
 	})
 	if err != nil {
 		return map[string]interface{}{}, err
@@ -98,7 +98,7 @@ func (uu UserUsecase) DecryptJWT(token string) (map[string]interface{}, error) {
 }
 
 func (uu UserUsecase) Login(c *gin.Context) {
-	var userRequest domain.User
+	var userRequest model.User
 	err := c.ShouldBind(&userRequest)
 	if err != nil {
 		c.JSON(400, gin.H{
@@ -113,7 +113,7 @@ func (uu UserUsecase) Login(c *gin.Context) {
 		return
 	}
 
-	var user domain.User
+	var user model.User
 	err = uu.db.Where("email = ?", userRequest.Email).Take(&user).Error
 	if err != nil || user.ID == 0 {
 		c.JSON(400, gin.H{

@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # environment:
+    #   - DB_USER=root
+    #   - DB_PASS=secret
+    #   - DB_HOST=db
+    #   - DB_PORT=3306
+    #   - DB_NAME=course
+    env_file:
+      - .env.example
+    ports:
+      - 8080:1234
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mysql:5.7
+    cap_add:
+      - SYS_NICE
+    restart: always
+    # environment:
+    #   - MYSQL_DATABASE=course
+    #   - MYSQL_ROOT_PASSWORD=secret
+    env_file:
+      - .env.example
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping"]
+      retries: 3
+      timeout: 5s
+    volumes:
+      - db:/var/lib/mysql
+      - ./course.sql:/docker-entrypoint-initdb.d/init.sql
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+volumes:
+  db:
+    driver: local
